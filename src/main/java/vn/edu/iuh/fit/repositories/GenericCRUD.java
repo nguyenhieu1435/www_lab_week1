@@ -5,6 +5,7 @@ import jakarta.persistence.EntityTransaction;
 import vn.edu.iuh.fit.database.Connection;
 
 import java.util.List;
+import java.util.Optional;
 
 public class GenericCRUD<T>{
     protected EntityManager em;
@@ -45,7 +46,8 @@ public class GenericCRUD<T>{
         EntityTransaction tr = em.getTransaction();
         tr.begin();
         try {
-            em.remove(findOne(clazz, id));
+            Optional<T> op = findOne(clazz, id);
+            em.remove(op.isPresent() ? op.get() : null);
             tr.commit();
             return true;
         } catch (Exception e){
@@ -54,8 +56,9 @@ public class GenericCRUD<T>{
         }
         return false;
     }
-    public T findOne(Class<T> clazz, Object id){
-        return em.find(clazz, id);
+    public Optional<T> findOne(Class<T> clazz, Object id){
+         T t = em.find(clazz, id);
+        return Optional.of(t);
     }
     public List<T> getAll(Class<T> clazz){
         return em.createQuery("from " + clazz.getName() , clazz).getResultList();

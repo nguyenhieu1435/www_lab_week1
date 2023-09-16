@@ -18,8 +18,7 @@ public class Account {
     private String email;
     @Column(columnDefinition = "VARCHAR(50)")
     private String phone;
-    @Column(columnDefinition = "TINYINT(4)", nullable = false)
-    @Enumerated(EnumType.ORDINAL)
+    @Column(columnDefinition = "TINYINT(4) SIGNED", nullable = false)
     private Status status;
 
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

@@ -14,8 +14,7 @@ public class Role {
     private String roleName;
     @Column(columnDefinition = "VARCHAR(50)")
     private String description;
-    @Column(columnDefinition = "TINYINT(4)", nullable = false)
-    @Enumerated(EnumType.ORDINAL)
+    @Column(columnDefinition = "TINYINT(4) SIGNED", nullable = false)
     private Status status;
 
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

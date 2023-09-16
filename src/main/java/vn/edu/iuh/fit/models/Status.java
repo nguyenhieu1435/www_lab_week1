@@ -6,13 +6,24 @@ public enum Status {
     DELETE(-1);
 
 
-    private final int status;
+    private final int statusNumber;
 
-    private Status(int status){
-        this.status = status;
+    private Status(int statusNumber){
+        this.statusNumber = statusNumber;
     }
 
-    public int getStatus(){
-        return status;
+    public int getStatusNumber(){
+        return statusNumber;
     }
+
+    public static Status fromStatusNumber(int statusNumber){
+        switch (statusNumber){
+            case 1: return Status.ACTIVE;
+            case 0: return Status.DEACTIVE;
+            case -1: return Status.DELETE;
+            default: return Status.DEACTIVE;
+        }
+    }
+
+
 }

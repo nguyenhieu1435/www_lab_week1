@@ -1,0 +1,67 @@
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body{
+    height: 100vh;
+}
+ul{
+    list-style: none;
+}
+.center-container{
+    flex-direction: column;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.cardInfo{
+    width: 400px;
+    padding: 32px;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
+    height: 500px;
+}
+.cardAvt{
+    margin: 0 auto;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+.cardAvt > img{
+    width: inherit;
+    height: inherit;
+    object-fit: cover;
+}
+.font-weight-bold{
+    font-weight: bold;
+}
+.font-weight-bold > span{
+    font-weight: normal;
+}
+
+.dashboard-control{
+    border: 1px solid #333;
+    padding: 24px 0;
+}
+.dashboard-user{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+.dashboard-user-img{
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+.dashboard-user-img > img{
+    height: inherit;
+    width: inherit;
+    object-fit: cover;
+}
+.btn-in-navlink{
+    border: none;
+    background-color: transparent;
+}

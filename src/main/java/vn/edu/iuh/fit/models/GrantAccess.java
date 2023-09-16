@@ -13,7 +13,6 @@ public class GrantAccess {
     @ManyToOne
     @JoinColumn(name = "account_id")
     private Account account;
-    @Enumerated(EnumType.STRING)
     @Column(name = "is_grant", columnDefinition = "ENUM('0', '1') DEFAULT '1'", nullable = false)
     private IsGrant isGrant;
     @Column(columnDefinition = "VARCHAR(250)")
