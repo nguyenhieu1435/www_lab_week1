@@ -584,6 +584,8 @@
     session.removeAttribute("statusRudRole");
     session.removeAttribute("statusRUDLog");
     session.removeAttribute("statusAddLog");
+    session.removeAttribute("statusAddGrantAccess");
+    session.removeAttribute("statusRUDGrantAccess");
 %>
 
 <%@ include file="/parts/footer.jsp" %>
