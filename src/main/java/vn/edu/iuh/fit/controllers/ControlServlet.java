@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import vn.edu.iuh.fit.models.*;
 import vn.edu.iuh.fit.services.AccountService;
+import vn.edu.iuh.fit.services.GrantAccessService;
 import vn.edu.iuh.fit.services.LogService;
 import vn.edu.iuh.fit.services.RoleService;
 
@@ -23,10 +24,13 @@ public class ControlServlet extends HttpServlet {
     private LogService logService;
     private RoleService roleService;
 
+    private GrantAccessService grantAccessService;
+
     public ControlServlet(){
         accountService = new AccountService();
         logService = new LogService();
         roleService = new RoleService();
+        grantAccessService = new GrantAccessService();
     }
 
     @Override
@@ -66,6 +70,15 @@ public class ControlServlet extends HttpServlet {
                 getNewestLog(req, resp);
                 break;
             }
+            case "getNewestRoleFromGrantAccess":{
+                getNewestRoleFromGrantAccess(req, resp);
+                break;
+            }
+            case "getNewestGrantAccess": {
+                getNewestGrantAccess(req, resp);
+                break;
+            }
+
             default:{
                 resp.sendError(400, "Post Action is invalid");
                 break;
@@ -121,6 +134,18 @@ public class ControlServlet extends HttpServlet {
             }
             case "deleteOneLog": {
                 deleteOneLog(req, resp);
+                break;
+            }
+            case "addNewGrantAccess": {
+                addNewGrantAccess(req, resp);
+                break;
+            }
+            case "updateGrantAccessFN": {
+                updateGrantAccessFN(req, resp);
+                break;
+            }
+            case "deleteOneGrantAccess":{
+                deleteOneGrantAccess(req, resp);
                 break;
             }
             default:{
@@ -207,6 +232,7 @@ public class ControlServlet extends HttpServlet {
             httpSession.removeAttribute("accountsByRole");
             httpSession.removeAttribute("roleWasChosen");
             httpSession.removeAttribute("rolesBelongToAccount");
+
             resp.sendRedirect("loginPage.jsp");
         }
     }
@@ -309,10 +335,12 @@ public class ControlServlet extends HttpServlet {
         List<Account> accounts = accountService.getAll();
         List<Role> roles = roleService.getAll();
         List<Log> logs = logService.getAll();
+        List<GrantAccess> grantAccesses = grantAccessService.getAll();
         HttpSession httpSession = req.getSession();
         httpSession.setAttribute("accountRUD", accounts);
         httpSession.setAttribute("roleRUD", roles);
         httpSession.setAttribute("logRUD", logs);
+        httpSession.setAttribute("grantAccessRUD", grantAccesses);
         resp.sendRedirect("dashboard.jsp");
     }
     public void getNewestDataAccount(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -352,13 +380,14 @@ public class ControlServlet extends HttpServlet {
         } else if (status.equalsIgnoreCase(Status.DELETE.name())){
             statusEnum = Status.DELETE;
         }
-        Account account  = new Account(accountId, fullname, password, email, phone, statusEnum );
+        Account account  = new Account(accountId, fullname, password, email, phone, statusEnum);
 
         boolean isUpdated = accountService.update(account);
 
         if (isUpdated){
             httpSession.setAttribute("statusRUDAccount", "Cập nhật thành công");
-
+            getNewestDataAccount(req, resp);
+            return;
         } else {
             httpSession.setAttribute("statusRUDAccount", "Cập nhật thất bại");
         }
@@ -440,6 +469,8 @@ public class ControlServlet extends HttpServlet {
 
         if (isUpdated){
             httpSession.setAttribute("statusRudRole", "Cập nhật thành công");
+            getNewestDataRole(req, resp);
+            return;
 
         } else {
             httpSession.setAttribute("statusRudRole", "Cập nhật thất bại");
@@ -461,7 +492,7 @@ public class ControlServlet extends HttpServlet {
 
         if (isDeleted){
             httpSession.setAttribute("statusRudRole", "Xóa thành công");
-            getNewestDataAccount(req, resp);
+            getNewestDataRole(req, resp);
             return;
         } else {
             httpSession.setAttribute("statusRudRole", "Xóa thất bại");
@@ -555,12 +586,114 @@ public class ControlServlet extends HttpServlet {
 
         if (isDeleted){
             httpSession.setAttribute("statusRUDLog", "Xóa thành công");
+            List<Log> logs = logService.getAll();
+            httpSession.setAttribute("logRUD", logs);
         } else {
             httpSession.setAttribute("statusRUDLog", "Xóa thất bại");
         }
-        List<Log> logs = logService.getAll();
-        httpSession.setAttribute("logRUD", logs);
         httpSession.setAttribute("activeDashboardTab", "rudLog");
         resp.sendRedirect("dashboard.jsp");
     }
+    public void getNewestRoleFromGrantAccess(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        List<Role> roles = roleService.getAll();
+        HttpSession httpSession = req.getSession();
+        httpSession.setAttribute("roleRUD", roles);
+        httpSession.setAttribute("activeDashboardTab", "addGrantAccess");
+        resp.sendRedirect("dashboard.jsp");
+    }
+    public void addNewGrantAccess(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String accountId = req.getParameter("accountId").trim();
+        String roleId = req.getParameter("roleId");
+        String note = req.getParameter("note");
+        IsGrant isGrant = IsGrant.ENABLE;
+        HttpSession httpSession = req.getSession();
+
+        if (accountId.isEmpty()){
+            httpSession.setAttribute("statusAddGrantAccess", "Account Id không được để trống!");
+            httpSession.setAttribute("activeDashboardTab", "addGrantAccess");
+            resp.sendRedirect("dashboard.jsp");
+            return;
+        }
+
+        Optional<Account> op;
+        try {
+            op = accountService.findOne(accountId);
+        } catch (Exception e){
+            httpSession.setAttribute("statusAddGrantAccess", "Account Id không tồn tại");
+            httpSession.setAttribute("activeDashboardTab", "addGrantAccess");
+            resp.sendRedirect("dashboard.jsp");
+            return;
+        }
+
+
+        Optional<GrantAccess> grantAccess = grantAccessService.findOne(accountId, roleId);
+        System.out.println(grantAccess);
+        GrantAccess grantAccessInfo = grantAccess.isPresent() ? grantAccess.get() : null;
+
+        if (grantAccessInfo != null && grantAccessInfo.getIsGrant() == IsGrant.ENABLE){
+            httpSession.setAttribute("statusAddGrantAccess", "Gán thất bại, quyền này đã được gán cho người dùng!");
+            httpSession.setAttribute("activeDashboardTab", "addGrantAccess");
+            resp.sendRedirect("dashboard.jsp");
+            return;
+        }
+
+        boolean isAdded = grantAccessService.update(new GrantAccess(new Role(roleId), new Account(accountId), isGrant, note));
+
+        if (isAdded){
+            httpSession.setAttribute("statusAddGrantAccess", "Thêm thành công!");
+        } else {
+            httpSession.setAttribute("statusAddGrantAccess", "Thêm thất bại");
+        }
+        httpSession.setAttribute("activeDashboardTab", "addGrantAccess");
+        resp.sendRedirect("dashboard.jsp");
+
+    }
+    public void getNewestGrantAccess(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        List<GrantAccess> grantAccesses = grantAccessService.getAll();
+        HttpSession httpSession = req.getSession();
+        httpSession.setAttribute("grantAccessRUD", grantAccesses);
+        httpSession.setAttribute("activeDashboardTab", "rudGrantAccess");
+        resp.sendRedirect("dashboard.jsp");
+    }
+    public void updateGrantAccessFN(HttpServletRequest req , HttpServletResponse resp) throws IOException {
+        String accountId = (String)req.getParameter("accountId");
+        String roleId = (String)req.getParameter("roleId");
+        String note = (String) req.getParameter("note");
+        IsGrant grant = IsGrant.valueOf((String)req.getParameter("isGrant"));
+
+        GrantAccess grantAccess = new GrantAccess(new Role(roleId), new Account(accountId), grant, note);
+        HttpSession httpSession = req.getSession();
+
+        boolean isUpdated = grantAccessService.update(grantAccess);
+
+        if (isUpdated){
+            httpSession.setAttribute("statusRUDGrantAccess", "Cập nhật thành công");
+            List<GrantAccess> grantAccesses = grantAccessService.getAll();
+            httpSession.setAttribute("grantAccessRUD", grantAccesses);
+        } else {
+            httpSession.setAttribute("statusRUDGrantAccess", "Cập nhật thất bại");
+        }
+        httpSession.setAttribute("activeDashboardTab", "rudGrantAccess");
+        resp.sendRedirect("dashboard.jsp");
+
+    }
+    public void deleteOneGrantAccess(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String accountId = req.getParameter("accountId");
+        String roleId = req.getParameter("roleId");
+        HttpSession httpSession = req.getSession();
+        boolean isDeleted = grantAccessService.delete(accountId, roleId);
+
+
+        if (isDeleted){
+            List<GrantAccess> grantAccesses = grantAccessService.getAll();
+            httpSession.setAttribute("statusRUDGrantAccess", "Xóa thành công");
+            httpSession.setAttribute("grantAccessRUD", grantAccesses);
+        } else {
+            httpSession.setAttribute("statusRUDGrantAccess", "Xóa thất bại");
+        }
+        httpSession.setAttribute("activeDashboardTab", "rudGrantAccess");
+        resp.sendRedirect("dashboard.jsp");
+    }
+
+
 }

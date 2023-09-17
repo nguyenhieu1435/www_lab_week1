@@ -58,7 +58,7 @@ public class GenericCRUD<T>{
     }
     public Optional<T> findOne(Class<T> clazz, Object id){
          T t = em.find(clazz, id);
-        return Optional.of(t);
+        return t != null ? Optional.of(t) : Optional.empty();
     }
     public List<T> getAll(Class<T> clazz){
         return em.createQuery("from " + clazz.getName() , clazz).getResultList();

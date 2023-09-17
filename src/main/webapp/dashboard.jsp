@@ -1,7 +1,6 @@
 <%@ page import="java.util.List" %>
-<%@ page import="vn.edu.iuh.fit.models.Role" %>
-<%@ page import="vn.edu.iuh.fit.models.Log" %>
-<%@ page import="java.time.format.DateTimeFormatter" %><%--
+<%@ page import="java.time.format.DateTimeFormatter" %>
+<%@ page import="vn.edu.iuh.fit.models.*" %><%--
   Created by IntelliJ IDEA.
   User: Acer
   Date: 12/09/2023
@@ -24,9 +23,12 @@
     String statusAddLog = (String)session.getAttribute("statusAddLog");
     String statusRudRole = (String)session.getAttribute("statusRudRole");
     String statusRUDLog = (String) session.getAttribute("statusRUDLog");
+    String statusRUDGrantAccess = (String)session.getAttribute("statusRUDGrantAccess");
+    String statusAddGrantAccess = (String)session.getAttribute("statusAddGrantAccess");
     List<Account> accountRUD = (List<Account>) session.getAttribute("accountRUD");
     List<Role> roleRUD = (List<Role>) session.getAttribute("roleRUD");
     List<Log> logRUD = (List<Log>) session.getAttribute("logRUD");
+    List<GrantAccess> grantAccessRUD = (List<GrantAccess>) session.getAttribute("grantAccessRUD");
 %>
 
 
@@ -102,6 +104,33 @@
                                     id="rud-log" data-bs-toggle="tab" data-bs-target="#rudLog" type="submit" role="tab"
                                     aria-controls="rudLog" aria-selected="false">
                                 Sửa, Xóa, Xem Log
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                Grant Access
+                <ul>
+                    <li class="nav-item " role="presentation">
+                       <form action="control-servlet" method="get">
+                           <input type="hidden" name="action" value="getNewestRoleFromGrantAccess"/>
+                           <button class="btn btn-primary mb-2
+                                <%=(activeDashboardTab != null && activeDashboardTab.equalsIgnoreCase("addGrantAccess")) ? "active" : ""%>
+                           "
+                                   id="add-grant-access" data-bs-toggle="tab" data-bs-target="#addGrantAccess" type="submit" role="tab"
+                                   aria-controls="addGrantAccess" aria-selected="false">
+                               Phân quyền
+                           </button>
+                       </form>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <form action="control-servlet" method="get">
+                            <input type="hidden" name="action" value="getNewestGrantAccess"/>
+                            <button class="btn btn-primary mb-2 <%=(activeDashboardTab != null && activeDashboardTab.equalsIgnoreCase("rudGrantAccess")) ? "active" : ""%>"
+                                    id="rud-grant-access" data-bs-toggle="tab" data-bs-target="#rudGrantAccess" type="submit" role="tab"
+                                    aria-controls="rudGrantAccess" aria-selected="false">
+                                Sửa, Xóa, Xem Quyền
                             </button>
                         </form>
                     </li>
@@ -437,7 +466,113 @@
                 <%}%>
             </div>
         </div>
+        <div class="tab-pane fade <%=(activeDashboardTab != null && activeDashboardTab.equalsIgnoreCase("addGrantAccess")) ? "show active" : ""%>"
+             id="addGrantAccess" role="tabpanel" aria-labelledby="add-grant-access">
+            <h3 class="text-primary text-center my-3">Phân quyền</h3>
 
+            <form style="width: 70%; margin: 0 auto" method="POST" action="control-servlet">
+                <div class="mb-3">
+                    <label for="accountIdGrant" class="form-label">Account ID</label>
+                    <input type="text" class="form-control" id="accountIdGrant" name="accountId" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <%for (int i = 0; i < roleRUD.size(); i++){%>
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input" id="<%=roleRUD.get(i).getRoleId()%>" name="roleId"
+                                   value="<%=roleRUD.get(i).getRoleId()%>"
+                                   <%=i == 0 ? "checked" : ""%>>
+                            <label for="<%=roleRUD.get(i).getRoleId()%>" class="form-check-label"><%=roleRUD.get(i).getRoleName()%></label>
+                        </div>
+                    <%}%>
+                </div>
+                <div class="mb-3">
+                    <label for="noteGrant" class="form-label">Note</label>
+                    <input type="text" class="form-control" id="noteGrant" name="note">
+                </div>
+                <input type="hidden" name="action" value="addNewGrantAccess"/>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-success">Phân Quyền</button>
+                </div>
+
+                <div class="text-center">
+                    <h3 class="text-primary">
+                        <%=(statusAddGrantAccess == null || statusAddGrantAccess.isEmpty()) ? "" : statusAddGrantAccess%>
+                    </h3>
+                </div>
+            </form>
+        </div>
+        <div class="tab-pane fade  <%=(activeDashboardTab != null && activeDashboardTab.equalsIgnoreCase("rudGrantAccess")) ? "show active" : ""%>"
+             id="rudGrantAccess" role="tabpanel" aria-labelledby="rud-grant-access">
+            <h3 class="text-primary text-center my-3">Xóa, Sửa, Xem GrantAccess</h3>
+            <h5 class="text-warning text-center my-3"><%=(statusRUDGrantAccess == null || statusRUDGrantAccess.isEmpty()) ? "" : statusRUDGrantAccess%></h5>
+            <div style="margin: 0 auto; width: 98%; ">
+                <div style="display: flex; align-items: center; width: 100%; justify-content: center; " >
+                    <div style="display: flex; justify-content: center; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 2px; flex-grow: 1">
+                        <div style="width: calc(100%/5)">
+                            AccountID
+                        </div>
+                        <div style="width: calc(100%/5)">
+                            RoleId
+                        </div>
+                        <div style="width: calc(100%/5)">
+                            Note
+                        </div>
+                        <div style="width: calc(100%/5)">
+                            Is Grant
+                        </div>
+                        <div style="width: calc(100%/5)">
+                            Sửa
+                        </div>
+                    </div>
+                    <div style="width: 10%">
+                        Xóa
+                    </div>
+                </div>
+                <% for (GrantAccess grantAccess : grantAccessRUD) { %>
+                <div style="display: flex; align-items: center;">
+                    <form action="control-servlet" method="POST"
+                          style="display: flex; justify-content: center; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 2px; flex-grow: 1">
+                        <div style="width: calc(100%/5); word-wrap: break-word;">
+                            <input style="outline: none; display: block; width: 100%; border: none" type="text" name="accountId"
+                                   value="<%=grantAccess.getAccount().getAccountId()%>" readonly required/>
+                        </div>
+                        <div style="width: calc(100%/5); word-wrap: break-word;">
+                            <input style="outline: none; border: none; display: block; width: 100%" type="text" name="roleId"
+                                   value="<%=grantAccess.getRole().getRoleId()%>" readonly required/>
+                        </div>
+                        <div style="width: calc(100%/5);word-wrap: break-word;">
+                            <input style="outline: none; display: block; width: 100%" type="text" name="note"
+                                   value="<%=grantAccess.getNote()%>"/>
+                        </div>
+                        <div style="width: calc(100%/5);word-wrap: break-word;">
+                            <select name="isGrant">
+                                <option value="<%=IsGrant.DISABLE.toString()%>"
+                                    <%=grantAccess.getIsGrant() == IsGrant.DISABLE ? "selected" : ""%>
+                                ><%=IsGrant.DISABLE.toString()%></option>
+                                <option value="<%=IsGrant.ENABLE.toString()%>"
+                                        <%=grantAccess.getIsGrant() == IsGrant.ENABLE ? "selected" : ""%>
+                                ><%=IsGrant.ENABLE.toString()%></option>
+                            </select>
+                        </div>
+                        <input type="hidden" name="action" value="updateGrantAccessFN"/>
+                        <div style="width: calc(100%/5);word-wrap: break-word;">
+                            <button type="submit" class="btn-warning btn">Sửa</button>
+                        </div>
+                    </form>
+                    <div style="width: 10%; word-wrap: break-word;">
+                        <form action="control-servlet" method="POST">
+                            <input type="hidden" name="action" value="deleteOneGrantAccess"/>
+                            <input type="hidden" name="roleId" value="<%=grantAccess.getRole().getRoleId()%>"/>
+                            <input type="hidden" name="accountId" value="<%=grantAccess.getAccount().getAccountId()%>"/>
+                            <button type="submit" class="btn btn-danger">Xóa</button>
+                        </form>
+                    </div>
+                </div>
+                <%}%>
+            </div>
+        </div>
     </div>
 </div>
 

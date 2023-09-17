@@ -1,7 +1,10 @@
 package vn.edu.iuh.fit.repositories;
 
+import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.Query;
+import jakarta.ws.rs.DELETE;
 import vn.edu.iuh.fit.models.Account;
+import vn.edu.iuh.fit.models.Status;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,4 +42,32 @@ public class AccountRepository extends GenericCRUD<Account>{
         return (List<Account>) query.getResultList();
     }
 
+    @Override
+    public List<Account> getAll(Class<Account> clazz) {
+        String sqlQuery = "select * from account a \n" +
+                "where status != ?1";
+        Query query = em.createNativeQuery(sqlQuery, Account.class);
+        query.setParameter(1, Status.DELETE.getStatusNumber());
+        return query.getResultList();
+    }
+
+    @Override
+    public boolean delete(Class<Account> clazz, Object id) {
+        EntityTransaction tr = em.getTransaction();
+        tr.begin();
+        try {
+            Optional<Account> op = findOne(Account.class, id);
+            Account acc = op.isPresent() ? op.get() : null;
+            if (acc != null){
+                acc.setStatus(Status.DELETE);
+                em.merge(acc);
+            }
+            tr.commit();
+            return true;
+        } catch (Exception e){
+            e.printStackTrace();
+            tr.rollback();;
+        }
+        return false;
+    }
 }
