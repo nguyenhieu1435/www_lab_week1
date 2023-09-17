@@ -20,4 +20,12 @@ public class LogService {
     public List<Log> getAll(){
         return logRepository.getAll(Log.class);
     }
+
+    public boolean update(Log log){
+        return logRepository.update(log);
+    }
+
+    public boolean delete(long id){
+        return logRepository.delete(Log.class, id);
+    }
 }

@@ -33,4 +33,8 @@ public class AccountService {
 
     public boolean delete(String accountId) { return accountRepository.delete(Account.class, accountId);}
 
+    public Optional<Account> findOne(String accountId) throws NullPointerException{
+        return accountRepository.findOne(Account.class, accountId);
+    }
+
 }

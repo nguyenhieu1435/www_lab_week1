@@ -12,6 +12,8 @@ import vn.edu.iuh.fit.services.LogService;
 import vn.edu.iuh.fit.services.RoleService;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,6 +62,10 @@ public class ControlServlet extends HttpServlet {
                 getNewestDataRole(req, resp);
                 break;
             }
+            case "getNewestLog": {
+                getNewestLog(req, resp);
+                break;
+            }
             default:{
                 resp.sendError(400, "Post Action is invalid");
                 break;
@@ -103,6 +109,18 @@ public class ControlServlet extends HttpServlet {
             }
             case "deleteOneRole": {
                 deleteOneRole(req, resp);
+                break;
+            }
+            case "addNewLog":{
+                addNewLog(req, resp);
+                break;
+            }
+            case "updateLogFN": {
+                updateLogFN(req, resp);
+                break;
+            }
+            case "deleteOneLog": {
+                deleteOneLog(req, resp);
                 break;
             }
             default:{
@@ -290,9 +308,11 @@ public class ControlServlet extends HttpServlet {
     public void handleOpenDashboard(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         List<Account> accounts = accountService.getAll();
         List<Role> roles = roleService.getAll();
+        List<Log> logs = logService.getAll();
         HttpSession httpSession = req.getSession();
         httpSession.setAttribute("accountRUD", accounts);
         httpSession.setAttribute("roleRUD", roles);
+        httpSession.setAttribute("logRUD", logs);
         resp.sendRedirect("dashboard.jsp");
     }
     public void getNewestDataAccount(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -447,6 +467,100 @@ public class ControlServlet extends HttpServlet {
             httpSession.setAttribute("statusRudRole", "Xóa thất bại");
         }
         httpSession.setAttribute("activeDashboardTab", "rudRole");
+        resp.sendRedirect("dashboard.jsp");
+    }
+    public void addNewLog(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession httpSession = req.getSession();
+        String accountId  = req.getParameter("accountId");
+        String loginDateString  = req.getParameter("loginDate");
+        String logoutDateString = req.getParameter("logoutDate");
+        String note = req.getParameter("note");
+
+        if (accountId.trim().isEmpty()){
+            httpSession.setAttribute("statusAddLog", "Không được để trống account id");
+            httpSession.setAttribute("activeDashboardTab", "addLog");
+            resp.sendRedirect("dashboard.jsp");
+            return;
+        }
+
+        try {
+            Optional<Account> op = accountService.findOne(accountId);
+            Account acc = op.isPresent() ? op.get() : null;
+
+        } catch (NullPointerException e){
+            httpSession.setAttribute("statusAddLog", "Tài khoản không tồn tại");
+            httpSession.setAttribute("activeDashboardTab", "addLog");
+            resp.sendRedirect("dashboard.jsp");
+            return;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+        LocalDateTime loginTime = LocalDateTime.parse(loginDateString, formatter);
+        LocalDateTime logoutTime = LocalDateTime.parse(logoutDateString, formatter);
+
+        boolean isAdded = logService.add(new Log(accountId, loginTime, logoutTime, note));
+
+        if (isAdded){
+            httpSession.setAttribute("statusAddLog", "Thêm thành công");
+        } else {
+            httpSession.setAttribute("statusAddLog", "Thêm thất bại");
+        }
+        httpSession.setAttribute("activeDashboardTab", "addLog");
+        resp.sendRedirect("dashboard.jsp");
+    }
+    public void getNewestLog(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        List<Log> logs = logService.getAll();
+        HttpSession httpSession = req.getSession();
+        httpSession.setAttribute("logRUD", logs);
+        httpSession.setAttribute("activeDashboardTab", "rudLog");
+        resp.sendRedirect("dashboard.jsp");
+
+    }
+    public void updateLogFN(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        HttpSession httpSession = req.getSession();
+
+        String logId = req.getParameter("logId");
+        String accountId = req.getParameter("accountId");
+        String note = req.getParameter("note");
+        String loginDateString = req.getParameter("loginDate");
+        String logoutDateString = req.getParameter("logoutDate");
+
+        if (logId.trim().isEmpty() || accountId.trim().isEmpty()){
+            httpSession.setAttribute("statusRUDLog", "account id không được để trống!");
+            httpSession.setAttribute("activeDashboardTabc", "rudLog");
+            resp.sendRedirect("dashboard.jsp");
+            return;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+        LocalDateTime loginTime = LocalDateTime.parse(loginDateString, formatter);
+        LocalDateTime logoutTime = LocalDateTime.parse(logoutDateString, formatter);
+
+        Log log = new Log(Long.parseLong(logId), accountId, loginTime, logoutTime, note);
+
+        boolean isUpdated = logService.update(log);
+        System.out.println(isUpdated);
+        if (isUpdated){
+            httpSession.setAttribute("statusRUDLog", "Sửa thành công");
+        } else {
+            httpSession.setAttribute("statusRUDLog", "Sửa thất bại");
+        }
+        httpSession.setAttribute("activeDashboardTab", "rudLog");
+        resp.sendRedirect("dashboard.jsp");
+    }
+    public void deleteOneLog(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String logId = req.getParameter("logIdForDelete");
+        HttpSession httpSession = req.getSession();
+        boolean isDeleted = logService.delete(Long.parseLong(logId));
+
+        if (isDeleted){
+            httpSession.setAttribute("statusRUDLog", "Xóa thành công");
+        } else {
+            httpSession.setAttribute("statusRUDLog", "Xóa thất bại");
+        }
+        List<Log> logs = logService.getAll();
+        httpSession.setAttribute("logRUD", logs);
+        httpSession.setAttribute("activeDashboardTab", "rudLog");
         resp.sendRedirect("dashboard.jsp");
     }
 }
